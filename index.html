@@ -1,0 +1,266 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>台灣鄉鎮市區地圖 by Leaflet</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+    <link rel="stylesheet" href="./leaflet/leaflet.css"/>
+    <script src="./leaflet/leaflet.js"></script>
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		#map {
+			width: 50%;
+			height: 100%;
+		}
+		.button1 {
+			top:0%;
+			left:50%;
+			width:100px;
+			height:50px;
+			position: absolute;
+			background-color: #008CBA;
+			color: white;
+			font-size: 16px;
+		}
+		.button2 {
+			top:55px;
+			left:50%;
+			width:100px;
+			height:50px;
+			position: absolute;
+			background-color: #008CBA;
+			color: white;
+			font-size: 16px;
+		}
+	</style>
+	<style>
+		#map { width: 50%; height: 100%; }
+			.info { left: 0px;top: 0px;padding: 6px 8px; font: 14px/16px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; } 
+			.info h4 { margin: 0 0 5px; color: #777; }
+			.legend { text-align: left; line-height: 18px; color: #555; } 
+			.legend i { width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }
+	</style>
+</head>
+<body>
+
+<div id='map'></div>
+<button type="button"  class="button1" onclick="updategeojsonIncome()">依平均所得顯示主題圖</button>
+<button type="button"  class="button2" onclick="updategeojsonpopulation()">依人口密度顯示主題圖</button>
+
+<script type="text/javascript" src="Twn_Town_1100415.js"></script>
+<script type="text/javascript" src="Twn_County_1090820.js"></script>
+<script type="text/javascript" src="opendata_107_income_modified.js"></script>
+<script type="text/javascript" src="opendata_109_population_modified.js"></script>
+
+<script type="text/javascript">
+
+	var map = L.map('map').setView([23.858558, 121.020978], 7);
+	var infotype = '';
+	var infounit = '';
+	// control that shows state info on hover
+	var info = L.control();
+
+	info.onAdd = function (map) {
+		this._div = L.DomUtil.create('div', 'info');
+		this.update();
+		return this._div;
+	};
+
+	info.update = function (props) {
+		if (props != null) {
+			if (props.TOWNNAME != null) {
+				this._div.innerHTML = '<h4>空間物件屬性' + infotype + '顯示</h4>' +  (props ?
+					'<b>縣市名稱: ' + props.COUNTYNAME + '</b><br /><b>鄉鎮市區名稱: ' + props.TOWNNAME + '</b><br /><b>屬性值: ' + props.ThematicV + infounit: '未確認');
+			} else {
+				this._div.innerHTML = '<h4>空間物件屬性' + infotype + '顯示</h4>' +  (props ?
+					'<b>縣市名稱: ' + props.COUNTYNAME + '</b>' : '未確認');			
+			}
+		}else{
+			this._div.innerHTML = '<h4>空間物件屬性' + infotype + '顯示</h4>' +  (props ?
+				'<b>縣市名稱: ' + props.COUNTYNAME + '</b><br /><b>鄉鎮市區名稱: ' + props.TOWNNAME + '</b><br /><b>屬性值: ' + props.ThematicV + infounit: '未確認');		
+		}
+	};
+	info.addTo(map);
+
+	function countystyle(feature) {
+		return {
+			weight: 5,
+			opacity: 1,
+			color: 'red',
+			dashArray: '3',
+			fillOpacity: 0,
+		};
+	};
+	function townstyle(feature) {
+		return {
+			weight: 1,
+			opacity: 0.5,
+			color: '#666',
+			dashArray: '3',
+			fillOpacity: 0.3,
+			fillColor: '#f0d1b1'
+		};
+	};
+	
+	var towngeojson;
+	var countygeojson;
+
+	function highlightFeature(e) {
+		var layer = e.target;
+		if (e.target = towngeojson) {
+			layer.setStyle({
+				weight: 5,
+				color: 'black',
+				dashArray: '',
+				fillOpacity: 0.7,
+				fillColor: '#b45501'
+			});
+			if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+				layer.bringToFront();
+			};
+			info.update(layer.feature.properties);
+		};
+	};
+
+	function countyhighlightFeature(e) {
+		var layer = e.target;
+		if (e.target = countygeojson) {
+			layer.setStyle({
+				weight: 5,
+				color: 'red',
+				dashArray: '',
+				fillOpacity: 0.3,
+				fillColor: 'red'
+			});
+			if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+				layer.bringToFront();
+			};
+			info.update(layer.feature.properties);
+		};
+	};
+	
+	function resetHighlight(e) {
+		towngeojson.resetStyle(e.target);
+		info.update(null);
+	};
+
+	function countyresetHighlight(e) {
+		countygeojson.resetStyle(e.target);
+		info.update(null);
+	};
+
+	function onEachFeature(feature, layer) {
+		layer.on({
+			mouseover: highlightFeature,
+			mouseout: resetHighlight,
+		});
+	};
+
+	function countyonEachFeature(feature, layer) {
+		layer.on({
+			mouseover: countyhighlightFeature,
+			mouseout: countyresetHighlight,
+		});
+	};
+	
+	function updategeojsonIncome() {
+		infotype = '(平均所得)';
+		infounit = '千元';
+		for (var i = 0; i < TwTownData.features.length; i++) {
+			TC1=TwTownData.features[i].properties.TOWNCODE
+			for (var j = 0; j < TwTown_income.length; j++) {
+				TC2=TwTown_income[j].TOWNCODE
+				if (TC1 == TC2){
+					TwTownData.features[i].properties.ThematicV = TwTown_income[j].Income_avg
+				};
+			};
+		};
+	};
+	
+	function updategeojsonpopulation() {
+		infotype = '(平均人口密度)';
+		infounit = '人/平方公里';
+		for (var i = 0; i < TwTownData.features.length; i++) {
+			TC1=TwTownData.features[i].properties.TOWNCODE
+			for (var j = 0; j < TwTown_population.length; j++) {
+				TC2=TwTown_population[j].TOWNCODE
+				if (TC1 == TC2){
+					TwTownData.features[i].properties.ThematicV = TwTown_population[j].population_density
+				};
+			};
+		};
+	};
+
+	/* load geojson data */
+	countygeojson = L.geoJson(TwCountyData, {
+		style: countystyle,
+		onEachFeature: countyonEachFeature
+	}).addTo(map);
+	countygeojson2 = L.geoJson(TwCountyData, {
+		style: countystyle,
+	});
+	towngeojson = L.geoJson(TwTownData, {
+		style: townstyle,
+		onEachFeature: onEachFeature
+	});
+
+	map.on('zoomend', function () {
+		if (map.getZoom() >= 10) {
+			countygeojson2.addTo(map);
+			towngeojson.addTo(map);
+			countygeojson.removeFrom(map);
+		};
+		if (map.getZoom() < 10)
+		{
+			infotype = '';
+			infounit = '';
+			towngeojson.removeFrom(map);
+			countygeojson.addTo(map);
+			countygeojson2.removeFrom(map);
+		};
+	});
+
+	var overlayCountyMaps = {
+		"縣市圖": countygeojson,
+	};
+	var overlaytownMaps = {
+		"鄉鎮市區圖": towngeojson,
+	};
+	L.control.layers('', overlaytownMaps).addTo(map);
+
+	/* Add Layer scaleTool to Map */
+	var scaleOptions = {
+		maxWidth: 100,
+		metric: true,
+		imperial: false,
+		updateWhenIdle: false
+	};
+	L.control.scale(scaleOptions).addTo(map);
+
+	/* remove leaflet logo */
+	attribution = map.attributionControl;
+	attribution.setPrefix('Copyright©2021 TGIC. All right reserved.');
+
+	/* zoom control options */
+	map.removeControl(map.zoomControl);
+	var zoomOptions = {
+		zoomInText: '大',
+		zoomInTitle: '地圖放大',
+		zoomOutText: '小',
+		zoomOutTitle: '地圖縮小'
+	};
+	var zoom = L.control.zoom(zoomOptions);
+	zoom.addTo(map);
+
+
+</script>
+
+
+
+</body>
+</html>
