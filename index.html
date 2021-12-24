@@ -167,6 +167,27 @@
 			mouseout: countyresetHighlight,
 		});
 	};
+
+	function getIncomeColor(d) {
+		return d > 951 ? '#800026' :
+			d > 846  ? '#BD0026' :
+			d > 791  ? '#E31A1C' :
+			d > 759  ? '#FC4E2A' :
+			d > 734   ? '#FD8D3C' :
+			d > 714   ? '#FEB24C' :
+			d > 681   ? '#FED976' : '#FFEDA0';
+	}
+
+	function Incomestyle(feature) {
+		return {
+			weight: 2,
+			opacity: 1,
+			color: 'white',
+			dashArray: '3',
+			fillOpacity: 0.7,
+			fillColor: getIncomeColor(feature.properties.ThematicV)
+		};
+	}
 	
 	function updategeojsonIncome() {
 		infotype = '(平均所得)';
@@ -180,7 +201,66 @@
 				};
 			};
 		};
+		//46,92,138,184,230,276,322
+		//681,714,734,759,791,846,951
+		if (map.getZoom() >= 10) {
+			countygeojson2.addTo(map);
+			towngeojson = L.geoJson(TwTownData, {
+				style: Incomestyle,
+				onEachFeature: onEachFeature
+			});
+			towngeojson.addTo(map);
+			countygeojson.removeFrom(map);
+			//legend.removeFrom(map);
+			var legend = L.control({position: 'bottomright'});
+			legend.onAdd = function (map) {
+				var div = L.DomUtil.create('div', 'info legend');
+				var grades = [0, 681, 714, 734, 759, 791, 846, 951];
+				var labels = [];
+				var from, to;
+				for (var i = 0; i < grades.length; i++) {
+					from = grades[i];
+					to = grades[i + 1];
+					labels.push(
+						'<i style="background:' + getColor(from + 1) + '"></i> ' +
+						from + (to ? '&ndash;' + to : '+'));
+				}
+				div.innerHTML = labels.join('<br>');
+				return div;
+			};
+			legend.addTo(map);
+		};
+		if (map.getZoom() < 10)
+		{
+			infotype = '';
+			infounit = '';
+			towngeojson.removeFrom(map);
+			countygeojson.addTo(map);
+			countygeojson2.removeFrom(map);
+		};
+
 	};
+	
+	function getpopulationColor(d) {
+		return d > 5521 ? '#800026' :
+			d > 1959  ? '#BD0026' :
+			d > 1068  ? '#E31A1C' :
+			d > 611  ? '#FC4E2A' :
+			d > 388   ? '#FD8D3C' :
+			d > 216   ? '#FEB24C' :
+			d > 62   ? '#FED976' : '#FFEDA0';
+	}
+
+	function populationstyle(feature) {
+		return {
+			weight: 2,
+			opacity: 1,
+			color: 'white',
+			dashArray: '3',
+			fillOpacity: 0.7,
+			fillColor: getpopulationColor(feature.properties.ThematicV)
+		};
+	}
 	
 	function updategeojsonpopulation() {
 		infotype = '(平均人口密度)';
@@ -193,6 +273,43 @@
 					TwTownData.features[i].properties.ThematicV = TwTown_population[j].population_density
 				};
 			};
+		};
+		//46,92,138,184,230,276,322
+		//62,216,388,611,1068,1959,5521
+		if (map.getZoom() >= 10) {
+			countygeojson2.addTo(map);
+			towngeojson = L.geoJson(TwTownData, {
+				style: populationstyle,
+				onEachFeature: onEachFeature
+			});
+			towngeojson.addTo(map);
+			countygeojson.removeFrom(map);
+			//legend.removeFrom(map);
+			var legend = L.control({position: 'bottomright'});
+			legend.onAdd = function (map) {
+				var div = L.DomUtil.create('div', 'info legend');
+				var grades = [0, 62, 216, 388, 611, 1068, 1959, 5521];
+				var labels = [];
+				var from, to;
+				for (var i = 0; i < grades.length; i++) {
+					from = grades[i];
+					to = grades[i + 1];
+					labels.push(
+						'<i style="background:' + getColor(from + 1) + '"></i> ' +
+						from + (to ? '&ndash;' + to : '+'));
+				}
+				div.innerHTML = labels.join('<br>');
+				return div;
+			};
+			legend.addTo(map);
+		};
+		if (map.getZoom() < 10)
+		{
+			infotype = '';
+			infounit = '';
+			towngeojson.removeFrom(map);
+			countygeojson.addTo(map);
+			countygeojson2.removeFrom(map);
 		};
 	};
 
