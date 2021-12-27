@@ -219,12 +219,13 @@
 				var grades = [0, 681, 714, 734, 759, 791, 846, 951];
 				var labels = [];
 				var from, to;
+				labels.push('<h4>圖例' + infotype + '</h4>');
 				for (var i = 0; i < grades.length; i++) {
 					from = grades[i];
 					to = grades[i + 1];
 					labels.push(
 						'<i style="background:' + getIncomeColor(from + 1) + '"></i> ' +
-						from + (to ? '&ndash;' + to : '+'));
+						from + (to ? '&ndash;' + to : '+') + infounit);
 				}
 				div.innerHTML = labels.join('<br>');
 				return div;
@@ -292,12 +293,13 @@
 				var grades = [0, 62, 216, 388, 611, 1068, 1959, 5521];
 				var labels = [];
 				var from, to;
+				labels.push('<h4>圖例' + infotype + '</h4>');
 				for (var i = 0; i < grades.length; i++) {
 					from = grades[i];
 					to = grades[i + 1];
 					labels.push(
 						'<i style="background:' + getpopulationColor(from + 1) + '"></i> ' +
-						from + (to ? '&ndash;' + to : '+'));
+						from + (to ? '&ndash;' + to : '+') + infounit);
 				}
 				div.innerHTML = labels.join('<br>');
 				return div;
