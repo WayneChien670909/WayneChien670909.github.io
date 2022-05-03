@@ -89,7 +89,7 @@ integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="crossorigin="anon
 			alert("農委會土石流觀測站影像介接獲取資料成功");
 			console.log(res);
 			for (var i = 0; i < res.length; i++) {
-				var marker1 = L.marker([res[i]['緯度'],res[i]['經度']]).addTo(map).bindPopup('<b>攝影機名稱: ' + res[i]['攝影機名稱'] + '</b><br /><b>架設或拍攝地點: ' + res[i]['架設或拍攝地點'] + '</b><br /><iframe src="' + res[i]['影像連結網址'] + '"  height="600" width="800"></iframe>').openPopup();
+				var marker1 = L.marker([res[i]['緯度'],res[i]['經度']]).addTo(map).bindPopup('<b>攝影機名稱: ' + res[i]['攝影機名稱'] + '</b><br /><b>架設或拍攝地點: ' + res[i]['架設或拍攝地點'] + '</b><br /><figure class="op-interactive"><iframe height="580" width="750" src="' + res[i]['影像連結網址'] + '"></iframe></figure>').openPopup();
 				layerGroup1.addLayer(marker1);
 			}
 		},
