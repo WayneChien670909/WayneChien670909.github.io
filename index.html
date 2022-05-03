@@ -80,22 +80,25 @@ integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="crossorigin="anon
 	var zoom = L.control.zoom(zoomOptions);
 	zoom.addTo(map);
 
-
+	var layerGroup1 = L.layerGroup().addTo(map);
 	$.ajax({
 		url:"https://data.coa.gov.tw/Service/OpenData/DataFileService.aspx?UnitId=111",
 		method:"GET",
 		dataType:"json",
 		success:function(res){
-			alert("success");
+			alert("農委會土石流觀測站影像介接獲取資料成功");
 			console.log(res);
 			for (var i = 0; i < res.length; i++) {
-				alert("攝影機流水編: " + (i+1) + "/" + (res.length) + "\r\n 攝影機名稱: " + res[i]['攝影機名稱'] + " \r\n 架設或拍攝地點: " + res[i]['架設或拍攝地點'] + " \r\n 影像連結網址: " + res[i]['影像連結網址'] + " \r\n 經度: " + res[i]['經度'] + " \r\n 緯度: " + res[i]['緯度']);
+				var marker1 = L.marker([res[i]['緯度'],res[i]['經度']]).addTo(map).bindPopup('<b>攝影機名稱: ' + res[i]['攝影機名稱'] + '</b><br /><b>架設或拍攝地點: ' + res[i]['架設或拍攝地點'] + '</b><br /><iframe src="' + res[i]['影像連結網址'] + '"  height="600" width="800"></iframe>').openPopup();
+				layerGroup1.addLayer(marker1);
 			}
 		},
 		error:function(err){
-			alert("土石流觀測站影像獲取失敗");
+			alert("農委會土石流觀測站影像介接獲取資料失敗");
 		},
 	});
+	var overlay1 = {'農委會土石流防災CCTV': layerGroup1};
+	L.control.layers(null, overlay1).addTo(map);
 </script>
 
 
