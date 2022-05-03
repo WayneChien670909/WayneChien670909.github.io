@@ -3,7 +3,7 @@
 <html>
 <head>
 	
-	<title>農委會土石流防災CCTV介接功能示範Demo</title>
+	<title>功能示範Demo</title>
 
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,8 +12,6 @@
 
     <link rel="stylesheet" href="./leaflet/leaflet.css"/>
     <script src="./leaflet/leaflet.js"></script>
-	<script src="https://code.jquery.com/jquery-3.4.1.js"
-integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="crossorigin="anonymous"></script>
 
 
 	<style>
@@ -24,11 +22,15 @@ integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="crossorigin="anon
 	</style>
 	<style>
 		#map { width: 100%; height: 100%; }
+			.info { left: 0px;top: 0px;padding: 6px 8px; font: 14px/16px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; } 
+			.info h4 { margin: 0 0 5px; color: #777; }
 	</style>
 </head>
 <body>
 
 <div id='map'></div>
+
+<script type="text/javascript" src="MilePline.js"></script>
 
 <script type="text/javascript">
 
@@ -36,6 +38,20 @@ integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="crossorigin="anon
 
 	attribution = map.attributionControl;
 	attribution.setPrefix('Copyright ©2021 TGIC ');
+
+	var info = L.control();
+
+	info.onAdd = function (map) {
+		this._div = L.DomUtil.create('div', 'info');
+		this.update();
+		return this._div;
+	};
+
+	info.update = function (props) {
+		this._div.innerHTML = '<h4>路段屬性</h4>' +  (props ?
+			'<b>路段路線名稱' + props.RouteName + '</b><br /><b>路段始點里程: ' + props.StartMile + '公尺</b><br /><b>路段終點里程: ' + props.EndMile + '公尺</b>': '請移動至欲查詢的路段');
+	};
+	info.addTo(map);
 
 	var mapLayers = {
 		'台灣通用版電子地圖': L.tileLayer('https://wmts.nlsc.gov.tw/wmts/EMAP98/default/GoogleMapsCompatible/{z}/{y}/{x}', {
@@ -80,22 +96,48 @@ integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="crossorigin="anon
 	var zoom = L.control.zoom(zoomOptions);
 	zoom.addTo(map);
 
+	function mileplinetyle(feature) {
+		return {
+			weight: 5,
+			opacity: 0.8,
+			color: 'orange'
+		};
+	}
 
-	$.ajax({
-		url:"https://data.coa.gov.tw/Service/OpenData/DataFileService.aspx?UnitId=111",
-		method:"GET",
-		dataType:"json",
-		success:function(res){
-			alert("success");
-			console.log(res);
-			for (var i = 0; i < res.length; i++) {
-				alert("攝影機流水編: " + (i+1) + "/" + (res.length) + "\r\n 攝影機名稱: " + res[i]['攝影機名稱'] + " \r\n 架設或拍攝地點: " + res[i]['架設或拍攝地點'] + " \r\n 影像連結網址: " + res[i]['影像連結網址'] + " \r\n 經度: " + res[i]['經度'] + " \r\n 緯度: " + res[i]['緯度']);
-			}
-		},
-		error:function(err){
-			alert("土石流觀測站影像獲取失敗");
-		},
+	function highlightFeature(e) {
+		var layer = e.target;
+		if (e.target = mileplinegeojson) {
+			layer.setStyle({
+				weight: 10,
+				opacity: 0.8,
+				color: '#666',
+			});
+			if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+				layer.bringToFront();
+			};
+			info.update(layer.feature.properties);
+		};
+	};
+
+	function resetHighlight(e) {
+		mileplinegeojson.resetStyle(e.target);
+		info.update(null);
+	};
+
+	function onEachFeature(feature, layer) {
+		layer.on({
+			mouseover: highlightFeature,
+			mouseout: resetHighlight,
+		});
+	};
+	
+	var mileplinegeojson;
+
+	mileplinegeojson = L.geoJson(MilePlineData, {
+		style: mileplinetyle,
+		onEachFeature: onEachFeature
 	});
+	mileplinegeojson.addTo(map);
 </script>
 
 
